@@ -117,14 +117,22 @@ To stop the server, you can usually just close the terminal window. However, for
 ## Troubleshooting
 
 - **`ERR_UNKNOWN_FILE_EXTENSION`**: This usually means Node.js is trying to run `.ts` files as ES Modules. Ensure your `package.json` does **not** contain `"type": "module"` and your `tsconfig.json` specifies `"module": "CommonJS"`. Make sure all `.ts` files use `require()` and `exports` (CommonJS syntax).
-- **`implicitly has an 'any' type`**: Add explicit types in your TypeScript code or configure `"noImplicitAny": false` in your `tsconfig.json` (not recommended for strictness).
-
-## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Author
-- **Ahmed Hesham** 
+- **`implicitly has an 'any' type`**: Add explicit types in your TypeScript code or configure `"noImplicitAny": false` in your `tsconfig.json` (not recommended for strictness). 
 
 ## Project URLs
 - https://roadmap.sh/projects/broadcast-server
 - https://github.com/AhmedHeshamC/broadcastServer
+
+
+## 🤝 Contributing
+
+1. Fork the repo
+2. Create feature branch
+3. Write tests
+4. Submit a PR
+
+Please adhere to the existing code style and coverage requirements.
+
+---
+
+© 2025 Ahmed Hesham. MIT License.
