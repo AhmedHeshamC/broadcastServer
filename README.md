@@ -32,7 +32,7 @@
 
 ## Usage
 
-### Start the Server
+### Start the Server (CLI Mode)
 
 Open a terminal and run:
 
@@ -45,6 +45,24 @@ npx ts-node broadcast-server.ts start --port 8080
   ```
   Broadcast server started on ws://localhost:8080
   ```
+
+### Start the Server with Web UI
+
+To start the server with the web-based chat UI, run:
+
+```bash
+npm run web
+```
+
+Or manually:
+
+```bash
+node build-ui.js && npx ts-node broadcast-server.ts web --port 8080
+```
+
+- This will compile the UI TypeScript files, bundle them, and start the server.
+- Open your browser and navigate to `http://localhost:8080` to access the chat UI.
+- Multiple users can connect by opening the same URL in different browsers or tabs.
 
 ### Connect as a Client
 
@@ -117,18 +135,40 @@ To stop the server, you can usually just close the terminal window. However, for
 ## Troubleshooting
 
 - **`ERR_UNKNOWN_FILE_EXTENSION`**: This usually means Node.js is trying to run `.ts` files as ES Modules. Ensure your `package.json` does **not** contain `"type": "module"` and your `tsconfig.json` specifies `"module": "CommonJS"`. Make sure all `.ts` files use `require()` and `exports` (CommonJS syntax).
-- **`implicitly has an 'any' type`**: Add explicit types in your TypeScript code or configure `"noImplicitAny": false` in your `tsconfig.json` (not recommended for strictness). 
+- **`implicitly has an 'any' type`**: Add explicit types in your TypeScript code or configure `"noImplicitAny": false` in your `tsconfig.json` (not recommended for strictness).
 
 ## Project URLs
 - https://roadmap.sh/projects/broadcast-server
 - https://github.com/AhmedHeshamC/broadcastServer
 
 
+## Testing
+
+The application includes a comprehensive test suite that tests the real code without mocking. To run the tests:
+
+```bash
+npm test
+```
+
+To run a specific test file:
+
+```bash
+npm test -- tests/core-functionality.test.ts
+```
+
+### Test Files
+
+- **core-functionality.test.ts**: Tests the core functionality of the application.
+- **models.test.ts**: Tests the data models (Message and User).
+- **ui-components.test.ts**: Tests the UI components in a jsdom environment.
+
+See the [tests/README.md](tests/README.md) file for more details on the testing approach.
+
 ## 🤝 Contributing
 
 1. Fork the repo
 2. Create feature branch
-3. Write tests
+3. Write tests (following the no-mocking approach)
 4. Submit a PR
 
 Please adhere to the existing code style and coverage requirements.

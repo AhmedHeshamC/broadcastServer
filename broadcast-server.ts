@@ -14,7 +14,7 @@ program
 
 program
   .command('start')
-  .description('Start the broadcast WebSocket server')
+  .description('Start the broadcast WebSocket server (CLI mode)')
   .option('-p, --port <number>', 'Port to listen on', '8080')
   // Add explicit types for opts based on options defined
   .action((opts: { port: string }) => {
@@ -23,6 +23,22 @@ program
       console.error('Error: Invalid port number.');
       process.exit(1);
     }
+    startServer(port);
+  });
+
+program
+  .command('web')
+  .description('Start the broadcast server with web UI')
+  .option('-p, --port <number>', 'Port to listen on', '8080')
+  // Add explicit types for opts based on options defined
+  .action((opts: { port: string }) => {
+    const port = parseInt(opts.port, 10);
+    if (isNaN(port)) {
+      console.error('Error: Invalid port number.');
+      process.exit(1);
+    }
+    console.log(`Starting web UI server on port ${port}`);
+    console.log(`Open your browser and navigate to http://localhost:${port}`);
     startServer(port);
   });
 

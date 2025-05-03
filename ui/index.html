@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Application</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>Chat Application</h1>
+    </header>
+
+    <section class="connection-form">
+      <form id="connect-form">
+        <div class="form-group">
+          <label for="host-input">Host:</label>
+          <input type="text" id="host-input" value="localhost" placeholder="Enter host">
+        </div>
+        <div class="form-group">
+          <label for="port-input">Port:</label>
+          <input type="number" id="port-input" value="8080" placeholder="Enter port">
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="connect-button" class="btn btn-primary">Connect</button>
+          <button type="button" id="disconnect-button" class="btn btn-danger" disabled>Disconnect</button>
+        </div>
+      </form>
+      <div id="connection-status" class="connection-status disconnected">Disconnected</div>
+    </section>
+
+    <div class="chat-container">
+      <div class="message-container">
+        <div id="message-list" class="message-list"></div>
+        <div class="message-form-container">
+          <form id="message-form">
+            <div class="message-form">
+              <input type="text" id="message-input" class="message-input" placeholder="Type your message..." disabled>
+              <button type="submit" id="send-button" class="btn btn-primary" disabled>Send</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div id="user-list" class="user-list-container"></div>
+    </div>
+  </div>
+
+  <script src="js/bundle.js"></script>
+</body>
+</html>

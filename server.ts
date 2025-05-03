@@ -1,5 +1,8 @@
 import { WebSocketServer } from 'ws';
 import type { WebSocket } from 'ws'; // Use 'import type' for WebSocket to avoid value conflict
+const express = require('express');
+const path = require('path');
+const http = require('http');
 
 // Helper function to generate a simple random name
 function generateRandomName(): string {
@@ -8,11 +11,23 @@ function generateRandomName(): string {
 
 // Use exports.functionName for CommonJS export
 exports.startServer = function(port: number) {
-  const wss = new WebSocketServer({ port });
+  // Create Express app
+  const app = express();
+
+  // Serve static files from the 'ui' directory
+  app.use(express.static(path.join(__dirname, 'ui')));
+
+  // Create HTTP server
+  const server = http.createServer(app);
+
+  // Create WebSocket server using the HTTP server
+  const wss = new WebSocketServer({ server });
+
   // Use a Map to store clients and their names
   const clients = new Map<WebSocket, string>();
 
-  console.log(`Broadcast server started on ws://localhost:${port}`);
+  console.log(`Broadcast server started on http://localhost:${port}`);
+  console.log(`WebSocket server available at ws://localhost:${port}`);
 
   // Helper function to broadcast messages to all clients (optionally excluding sender)
   function broadcast(message: object, sender?: WebSocket) {
@@ -80,13 +95,21 @@ exports.startServer = function(port: number) {
       client.close(1000, 'Server shutting down'); // Send close frame
     }
     wss.close(() => {
-      console.log('Server closed.');
-      process.exit(0);
+      console.log('WebSocket server closed.');
+      server.close(() => {
+        console.log('HTTP server closed.');
+        process.exit(0);
+      });
     });
-     // Force exit if server doesn't close quickly
+    // Force exit if server doesn't close quickly
     setTimeout(() => {
-        console.log('Forcing exit.');
-        process.exit(1);
+      console.log('Forcing exit.');
+      process.exit(1);
     }, 2000);
+  });
+
+  // Start the server
+  server.listen(port, () => {
+    console.log(`Server is listening on port ${port}`);
   });
 };
