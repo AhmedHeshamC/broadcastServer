@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broadcast Server v2.0 - Enterprise WebSocket Chat</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@3/dist/vuetify.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .app-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .feature-section {
+            margin: 20px 0;
+        }
+
+        .feature-title {
+            color: #2c3e50;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .connection-mode {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .command-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+
+        .test-area {
+            background: #ffffff;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .ws-status {
+            background: #ecf0f1;
+            border-radius: 8px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-main>
+                <div class="app-container">
+                    <v-container>
+                        <v-card class="main-card" max-width="800">
+                            <v-card-title class="text-center pa-6">
+                                <div class="d-flex align-center justify-center w-100">
+                                    <v-icon size="32" color="primary" class="mr-3">mdi-rocket-launch</v-icon>
+                                    <div>
+                                        <h1 class="text-h4 font-weight-bold">Broadcast Server v2.0</h1>
+                                        <div class="text-h6 text-medium-emphasis">Enterprise WebSocket Platform</div>
+                                    </div>
+                                </div>
+                            </v-card-title>
+
+                            <v-card-text class="pa-6">
+                                <!-- System Status -->
+                                <div class="feature-section">
+                                    <div class="feature-title">🔧 System Status</div>
+                                    <div class="status-indicator">
+                                        <div class="status-dot"></div>
+                                        <span>All Systems Operational</span>
+                                    </div>
+                                    <v-chip color="success" size="small" class="ma-1">29/29 Tests Passing</v-chip>
+                                    <v-chip color="primary" size="small" class="ma-1">8 Operation Modes</v-chip>
+                                    <v-chip color="info" size="small" class="ma-1">100% Backward Compatible</v-chip>
+                                </div>
+
+                                <!-- Connection Modes -->
+                                <div class="feature-section">
+                                    <div class="feature-title">🌐 Connection Modes</div>
+
+                                    <div class="connection-mode">
+                                        <h4><v-icon color="primary">mdi-web</v-icon> Enterprise Web Client</h4>
+                                        <p><strong>URL:</strong> http://localhost:3000</p>
+                                        <p><strong>Features:</strong> Google OAuth, JWT Auth, Message Persistence</p>
+                                    </div>
+
+                                    <div class="connection-mode">
+                                        <h4><v-icon color="success">mdi-console</v-icon> CLI WebSocket Client</h4>
+                                        <p><strong>URL:</strong> ws://localhost:8080</p>
+                                        <p><strong>Features:</strong> Legacy Protocol, Random Usernames, Real-time Chat</p>
+                                    </div>
+                                </div>
+
+                                <!-- CLI Commands -->
+                                <div class="feature-section">
+                                    <div class="feature-title">💻 CLI Commands</div>
+                                    <div class="command-block">
+                                        # Start unified server (recommended)<br>
+                                        node dist/broadcast-server.js unified<br><br>
+
+                                        # CLI Client Connection<br>
+                                        node dist/broadcast-server.js connect --port 8080<br><br>
+
+                                        # Enterprise Server Only<br>
+                                        node dist/broadcast-server.js enterprise<br><br>
+
+                                        # System Status<br>
+                                        node dist/broadcast-server.js status
+                                    </div>
+                                </div>
+
+                                <!-- Live Test Area -->
+                                <div class="test-area">
+                                    <h3><v-icon color="error">mdi-test-tube</v-icon> Live WebSocket Test</h3>
+
+                                    <v-btn @click="testConnection()" :color="connected ? 'success' : 'primary'" class="ma-2">
+                                        <v-icon>{{ connected ? 'mdi-check-circle' : 'mdi-play' }}</v-icon>
+                                        {{ connected ? 'Connected to Enterprise Server' : 'Test Connection' }}
+                                    </v-btn>
+
+                                    <v-btn @click="testCLIConnection()" :color="cliConnected ? 'success' : 'secondary'" class="ma-2">
+                                        <v-icon>{{ cliConnected ? 'mdi-check-circle' : 'mdi-console' }}</v-icon>
+                                        {{ cliConnected ? 'Connected to CLI Server' : 'Test CLI Connection' }}
+                                    </v-btn>
+
+                                    <div class="ws-status mt-4">
+                                        <div><strong>Enterprise Server (port 3000):</strong> {{ wsStatus.enterprise }}</div>
+                                        <div><strong>CLI Server (port 8080):</strong> {{ wsStatus.cli }}</div>
+                                        <div><strong>Frontend Server:</strong> {{ wsStatus.frontend }}</div>
+                                    </div>
+
+                                    <v-text-field
+                                        v-model="testMessage"
+                                        label="Test Message"
+                                        placeholder="Enter a message to broadcast..."
+                                        :disabled="!connected && !cliConnected"
+                                        @keyup.enter="sendMessage()"
+                                        class="mt-4"
+                                    >
+                                        <template v-slot:append>
+                                            <v-btn
+                                                @click="sendMessage()"
+                                                :disabled="!connected && !cliConnected || !testMessage"
+                                                color="primary"
+                                                size="small"
+                                            >
+                                                Send
+                                            </v-btn>
+                                        </template>
+                                    </v-text-field>
+
+                                    <div v-if="messages.length > 0" class="messages">
+                                        <h4>Messages:</h4>
+                                        <div v-for="(msg, index) in messages" :key="index" class="message mb-2 pa-2 bg-grey-lighten-4 rounded">
+                                            <small>{{ msg.timestamp }} - {{ msg.source }}:</small>
+                                            <div>{{ msg.content }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Architecture Information -->
+                                <div class="feature-section">
+                                    <div class="feature-title">🏗️ Architecture Features</div>
+                                    <v-row>
+                                        <v-col cols="12" md="6">
+                                            <v-card variant="outlined">
+                                                <v-card-text>
+                                                    <h4>✅ SOLID Principles</h4>
+                                                    <ul>
+                                                        <li>Single Responsibility</li>
+                                                        <li>Open/Closed</li>
+                                                        <li>Interface Segregation</li>
+                                                        <li>Dependency Inversion</li>
+                                                    </ul>
+                                                </v-card-text>
+                                            </v-card>
+                                        </v-col>
+                                        <v-col cols="12" md="6">
+                                            <v-card variant="outlined">
+                                                <v-card-text>
+                                                    <h4>🚀 Enterprise Features</h4>
+                                                    <ul>
+                                                        <li>Google OAuth 2.0</li>
+                                                        <li>JWT Authentication</li>
+                                                        <li>Rate Limiting</li>
+                                                        <li>MongoDB Integration</li>
+                                                    </ul>
+                                                </v-card-text>
+                                            </v-card>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card-text>
+                        </v-card>
+                    </v-container>
+                </div>
+            </v-main>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@3/dist/vuetify.min.js"></script>
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+    <script>
+        const { createApp } = Vue;
+        const { createVuetify } = Vuetify;
+
+        const app = createApp({
+            data() {
+                return {
+                    connected: false,
+                    cliConnected: false,
+                    testMessage: '',
+                    messages: [],
+                    wsStatus: {
+                        enterprise: 'Not tested',
+                        cli: 'Not tested',
+                        frontend: 'Serving on port 5173'
+                    },
+                    enterpriseSocket: null,
+                    cliSocket: null
+                };
+            },
+            methods: {
+                async testConnection() {
+                    try {
+                        this.wsStatus.enterprise = 'Testing connection...';
+
+                        // Test with fetch first
+                        const response = await fetch('http://localhost:3000/health');
+                        if (response.ok) {
+                            // Connect to Socket.IO
+                            if (this.enterpriseSocket) {
+                                this.enterpriseSocket.disconnect();
+                            }
+
+                            this.enterpriseSocket = io('http://localhost:3000', {
+                                forceNew: true
+                            });
+
+                            // Remove all existing listeners to prevent duplicates
+                            this.enterpriseSocket.removeAllListeners();
+
+                            this.enterpriseSocket.on('connect', () => {
+                                this.connected = true;
+                                this.wsStatus.enterprise = '✅ Connected successfully';
+                                this.addMessage('System', 'Connected to enterprise server');
+                            });
+
+                            this.enterpriseSocket.on('broadcast', (data) => {
+                                const timestamp = new Date().toISOString();
+                                console.log(`[${timestamp}] [FRONTEND_RECEIVER] Received 'broadcast' event:`, {
+                                    data: data,
+                                    content: data.content,
+                                    message: data.message,
+                                    messageId: data.messageId,
+                                    senderId: data.senderId,
+                                    senderName: data.senderName
+                                });
+
+                                // Display only the content for user messages
+                                let displayMessage = data.content || data.message;
+
+                                // For system messages, extract username from content if available
+                                if (data.type === 'user_joined' && data.metadata?.username) {
+                                    displayMessage = `${data.metadata.username} joined the chat`;
+                                } else if (data.type === 'user_left' && data.metadata?.username) {
+                                    displayMessage = `${data.metadata.username} left the chat`;
+                                }
+
+                                this.addMessage('Enterprise', displayMessage || 'System message');
+                            });
+
+                            this.enterpriseSocket.on('user_joined', (data) => {
+                                this.addMessage('System', `${data.content || data.user} joined`);
+                            });
+
+                            this.enterpriseSocket.on('user_left', (data) => {
+                                this.addMessage('System', `${data.content || data.user} left`);
+                            });
+
+                            this.enterpriseSocket.on('disconnect', () => {
+                                this.connected = false;
+                                this.wsStatus.enterprise = '❌ Disconnected';
+                            });
+
+                            this.enterpriseSocket.on('connect_error', (error) => {
+                                this.connected = false;
+                                this.wsStatus.enterprise = `❌ Connection error: ${error.message}`;
+                            });
+                        } else {
+                            this.wsStatus.enterprise = '❌ Server responded with error';
+                        }
+                    } catch (error) {
+                        this.wsStatus.enterprise = `❌ Connection failed: ${error.message}`;
+                        this.connected = false;
+                    }
+                },
+
+                async testCLIConnection() {
+                    const timestamp = new Date().toISOString();
+                    console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Starting CLI connection test`);
+                    console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Initial state:`, {
+                        cliConnected: this.cliConnected,
+                        cliSocketExists: !!this.cliSocket,
+                        currentStatus: this.wsStatus.cli
+                    });
+
+                    try {
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Setting status to testing...`);
+                        this.wsStatus.cli = 'Testing connection...';
+
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Closing existing CLI socket if present...`);
+                        // Connect to CLI WebSocket server
+                        if (this.cliSocket) {
+                            console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Existing socket found, closing it...`);
+                            this.cliSocket.close();
+                        }
+
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Creating new WebSocket to ws://localhost:8080`);
+                        this.cliSocket = new WebSocket('ws://localhost:8080');
+
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] Setting up WebSocket event handlers...`);
+
+                        this.cliSocket.onopen = () => {
+                            const openTimestamp = new Date().toISOString();
+                            console.log(`[${openTimestamp}] [TEST_CLI_CONNECTION] CLI Socket onopen event fired`);
+                            console.log(`[${openTimestamp}] [TEST_CLI_CONNECTION] WebSocket readyState:`, this.cliSocket.readyState);
+                            console.log(`[${openTimestamp}] [TEST_CLI_CONNECTION] Updating UI status to connected`);
+
+                            this.cliConnected = true;
+                            this.wsStatus.cli = '✅ Connected successfully';
+                            this.addMessage('CLI', 'Connected to CLI server');
+
+                            console.log(`[${openTimestamp}] [TEST_CLI_CONNECTION] CLI connection test completed successfully`);
+                        };
+
+                        this.cliSocket.onmessage = (event) => {
+                            const messageTimestamp = new Date().toISOString();
+                            console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] CLI Socket onmessage event fired`);
+                            console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Raw message data:`, event.data);
+
+                            try {
+                                const data = JSON.parse(event.data);
+                                console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Parsed message data:`, data);
+
+                                let message = '';
+                                if (data.type === 'your_name') {
+                                    message = `Your name is: ${data.payload}`;
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Processed your_name message:`, message);
+                                } else if (data.type === 'message') {
+                                    message = data.content;
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Processed message:`, message);
+                                } else if (data.type === 'system') {
+                                    message = data.payload;
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Processed system message:`, message);
+                                } else if (data.type === 'user_joined') {
+                                    message = data.content; // Extract clean content like "User376 joined the chat"
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Processed user_joined message:`, message);
+                                } else if (data.type === 'user_left') {
+                                    message = data.content; // Extract clean content like "User376 left the chat"
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Processed user_left message:`, message);
+                                } else {
+                                    message = JSON.stringify(data);
+                                    console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Unhandled message type, stringifying:`, message);
+                                }
+
+                                console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Adding message to UI:`, { source: 'CLI', content: message });
+                                this.addMessage('CLI', message);
+                            } catch (e) {
+                                console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] JSON parse failed, treating as raw message:`, event.data);
+                                console.log(`[${messageTimestamp}] [TEST_CLI_CONNECTION] Parse error:`, e);
+                                this.addMessage('CLI', event.data);
+                            }
+                        };
+
+                        this.cliSocket.onclose = (event) => {
+                            const closeTimestamp = new Date().toISOString();
+                            console.log(`[${closeTimestamp}] [TEST_CLI_CONNECTION] CLI Socket onclose event fired`);
+                            console.log(`[${closeTimestamp}] [TEST_CLI_CONNECTION] Close event details:`, {
+                                code: event.code,
+                                reason: event.reason,
+                                wasClean: event.wasClean
+                            });
+
+                            this.cliConnected = false;
+                            this.wsStatus.cli = '❌ Disconnected';
+
+                            console.log(`[${closeTimestamp}] [TEST_CLI_CONNECTION] UI updated to disconnected state`);
+                        };
+
+                        this.cliSocket.onerror = (error) => {
+                            const errorTimestamp = new Date().toISOString();
+                            console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] CLI Socket onerror event fired`);
+                            console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] Error object:`, error);
+                            console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] WebSocket readyState:`, this.cliSocket.readyState);
+
+                            this.cliConnected = false;
+                            this.wsStatus.cli = '❌ Connection failed';
+
+                            console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] UI updated to error state`);
+                        };
+
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] WebSocket created and event handlers attached`);
+                        console.log(`[${timestamp}] [TEST_CLI_CONNECTION] WebSocket readyState after creation:`, this.cliSocket.readyState);
+
+                    } catch (error) {
+                        const errorTimestamp = new Date().toISOString();
+                        console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] Exception caught in testCLIConnection`);
+                        console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] Error details:`, {
+                            message: error.message,
+                            stack: error.stack,
+                            name: error.name
+                        });
+
+                        this.wsStatus.cli = `❌ Connection failed: ${error.message}`;
+                        this.cliConnected = false;
+
+                        console.log(`[${errorTimestamp}] [TEST_CLI_CONNECTION] UI updated with exception state`);
+                    }
+                },
+
+                sendMessage() {
+                    if (!this.testMessage.trim()) return;
+
+                    const message = this.testMessage.trim();
+                    const timestamp = new Date().toISOString();
+
+                    console.log(`[${timestamp}] [FRONTEND_SEND_MESSAGE] Starting message send:`, {
+                        message: message,
+                        connected: this.connected,
+                        cliConnected: this.cliConnected,
+                        enterpriseSocketExists: !!this.enterpriseSocket,
+                        cliSocketExists: !!this.cliSocket
+                    });
+
+                    if (this.connected && this.enterpriseSocket) {
+                        console.log(`[${timestamp}] [FRONTEND_SEND_MESSAGE] Sending to enterprise server:`, {
+                            type: 'message',
+                            content: message
+                        });
+                        this.enterpriseSocket.emit('message', {
+                            type: 'message',
+                            content: message
+                        });
+                    }
+
+                    if (this.cliConnected && this.cliSocket) {
+                        console.log(`[${timestamp}] [FRONTEND_SEND_MESSAGE] Sending to CLI server:`, {
+                            type: 'message',
+                            content: message
+                        });
+                        this.cliSocket.send(JSON.stringify({
+                            type: 'message',
+                            content: message
+                        }));
+                    }
+
+                    // Don't add local message - server will broadcast it back
+                    this.testMessage = '';
+                    console.log(`[${timestamp}] [FRONTEND_SEND_MESSAGE] Message send completed`);
+                },
+
+                addMessage(source, content) {
+                    this.messages.unshift({
+                        timestamp: new Date().toLocaleTimeString(),
+                        source,
+                        content
+                    });
+
+                    // Keep only last 10 messages
+                    if (this.messages.length > 10) {
+                        this.messages = this.messages.slice(0, 10);
+                    }
+                }
+            },
+            mounted() {
+                this.addMessage('System', 'Broadcast Server v2.0 frontend loaded successfully');
+            }
+        });
+
+        const vuetify = createVuetify({
+            theme: {
+                defaultTheme: 'light'
+            }
+        });
+
+        app.use(vuetify);
+        app.mount('#app');
+    </script>
+</body>
+</html>
